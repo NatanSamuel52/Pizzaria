@@ -29,7 +29,7 @@ namespace Pizzaria.Views
                 Telefone = txtTelefone.Text,
                 Endereco = txtEndereco.Text
             };
-
+            
             _context.Clientes.Add(novoCliente);
             _context.SaveChanges();
             MessageBox.Show("Cliente cadastrado com sucesso!");
