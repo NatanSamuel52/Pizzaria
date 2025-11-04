@@ -1,4 +1,6 @@
-﻿namespace Pizzaria.Models
+﻿using System.Collections.Generic;
+
+namespace Pizzaria.Models
 {
     public class Cliente
     {
@@ -7,7 +9,6 @@
         public string Telefone { get; set; }
         public string Endereco { get; set; }
 
-        // Relação: 1 Cliente -> N Pedidos
-        public ICollection<Pedido> Pedidos { get; set; }
+        public ICollection<Pedido> Pedidos { get; set; } = new List<Pedido>();
     }
 }

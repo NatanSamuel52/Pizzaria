@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Windows;
 using Pizzaria.Models;
 
@@ -6,85 +7,114 @@ namespace Pizzaria.Views
 {
     public partial class CadastroCliente : Window
     {
-        private PizzariaContext _context;
-        private Cliente _clienteSelecionado;
+        private PizzariaContext _context = new PizzariaContext();
+        private Cliente clienteSelecionado;
 
         public CadastroCliente()
         {
             InitializeComponent();
-            _context = new PizzariaContext();
-            ListarClientes();
+            CarregarClientes();
         }
 
-        private void ListarClientes()
+        private void CarregarClientes()
         {
             dgClientes.ItemsSource = _context.Clientes.ToList();
         }
 
         private void Cadastrar_Click(object sender, RoutedEventArgs e)
         {
-            var novoCliente = new Cliente
+            try
             {
-                Nome = txtNome.Text,
-                Telefone = txtTelefone.Text,
-                Endereco = txtEndereco.Text
-            };
-            
-            _context.Clientes.Add(novoCliente);
-            _context.SaveChanges();
-            MessageBox.Show("Cliente cadastrado com sucesso!");
-            LimparCampos();
-            ListarClientes();
+                if (string.IsNullOrWhiteSpace(txtNome.Text) ||
+                    string.IsNullOrWhiteSpace(txtTelefone.Text) ||
+                    string.IsNullOrWhiteSpace(txtEndereco.Text))
+                {
+                    MessageBox.Show("Preencha todos os campos!", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                var novoCliente = new Cliente
+                {
+                    Nome = txtNome.Text,
+                    Telefone = txtTelefone.Text,
+                    Endereco = txtEndereco.Text
+                };
+
+                _context.Clientes.Add(novoCliente);
+                _context.SaveChanges();
+
+                MessageBox.Show("Cliente cadastrado com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
+                LimparCampos();
+                CarregarClientes();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Erro ao cadastrar cliente: " + ex.Message);
+            }
         }
 
         private void Editar_Click(object sender, RoutedEventArgs e)
         {
-            if (_clienteSelecionado != null)
+            try
             {
-                _clienteSelecionado.Nome = txtNome.Text;
-                _clienteSelecionado.Telefone = txtTelefone.Text;
-                _clienteSelecionado.Endereco = txtEndereco.Text;
+                if (clienteSelecionado == null)
+                {
+                    MessageBox.Show("Selecione um cliente para editar!", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
 
-                _context.Clientes.Update(_clienteSelecionado);
+                clienteSelecionado.Nome = txtNome.Text;
+                clienteSelecionado.Telefone = txtTelefone.Text;
+                clienteSelecionado.Endereco = txtEndereco.Text;
+
+                _context.Clientes.Update(clienteSelecionado);
                 _context.SaveChanges();
 
-                MessageBox.Show("Cliente atualizado com sucesso!");
+                MessageBox.Show("Cliente atualizado com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
                 LimparCampos();
-                ListarClientes();
+                CarregarClientes();
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show("Selecione um cliente para editar.");
+                MessageBox.Show("Erro ao editar cliente: " + ex.Message);
             }
         }
 
         private void Excluir_Click(object sender, RoutedEventArgs e)
         {
-            if (_clienteSelecionado != null)
+            try
             {
-                if (MessageBox.Show("Deseja excluir este cliente?", "Confirmação", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                if (clienteSelecionado == null)
                 {
-                    _context.Clientes.Remove(_clienteSelecionado);
+                    MessageBox.Show("Selecione um cliente para excluir!", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (MessageBox.Show("Tem certeza que deseja excluir este cliente?", "Confirmação",
+                    MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                {
+                    _context.Clientes.Remove(clienteSelecionado);
                     _context.SaveChanges();
-                    MessageBox.Show("Cliente excluído com sucesso!");
+
+                    MessageBox.Show("Cliente excluído com sucesso!", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
                     LimparCampos();
-                    ListarClientes();
+                    CarregarClientes();
                 }
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show("Selecione um cliente para excluir.");
+                MessageBox.Show("Erro ao excluir cliente: " + ex.Message);
             }
         }
 
         private void dgClientes_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
-            _clienteSelecionado = dgClientes.SelectedItem as Cliente;
-            if (_clienteSelecionado != null)
+            clienteSelecionado = dgClientes.SelectedItem as Cliente;
+            if (clienteSelecionado != null)
             {
-                txtNome.Text = _clienteSelecionado.Nome;
-                txtTelefone.Text = _clienteSelecionado.Telefone;
-                txtEndereco.Text = _clienteSelecionado.Endereco;
+                txtNome.Text = clienteSelecionado.Nome;
+                txtTelefone.Text = clienteSelecionado.Telefone;
+                txtEndereco.Text = clienteSelecionado.Endereco;
             }
         }
 
@@ -93,7 +123,8 @@ namespace Pizzaria.Views
             txtNome.Text = "";
             txtTelefone.Text = "";
             txtEndereco.Text = "";
-            _clienteSelecionado = null;
+            clienteSelecionado = null;
+            dgClientes.UnselectAll();
         }
     }
 }

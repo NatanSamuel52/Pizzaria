@@ -9,19 +9,16 @@ namespace Pizzaria.Models
         public DbSet<Pedido> Pedidos { get; set; }
         public DbSet<ItemPedido> ItensPedido { get; set; }
 
-
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
             {
-                
-                optionsBuilder.UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=PizzariaDB;Trusted_Connection=True;");
+                optionsBuilder.UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=PizzariaFornalhaDB;Trusted_Connection=True;");
             }
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            
             modelBuilder.Entity<ItemPedido>()
                 .HasOne(i => i.Pedido)
                 .WithMany(p => p.ItensPedido)

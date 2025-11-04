@@ -1,24 +1,31 @@
-﻿using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+﻿using System.Windows;
+using Pizzaria.Views;
 
 namespace Pizzaria
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
         public MainWindow()
         {
             InitializeComponent();
+        }
+
+        private void AbrirClientes_Click(object sender, RoutedEventArgs e)
+        {
+            var janela = new Views.CadastroCliente();
+            janela.ShowDialog();
+        }
+
+        private void AbrirAdmin_Click(object sender, RoutedEventArgs e)
+        {
+            // entrada simples para admin — só abre a janela
+            var janela = new Views.AdminPizzas();
+            janela.ShowDialog();
+        }
+
+        private void Sair_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
         }
     }
 }
