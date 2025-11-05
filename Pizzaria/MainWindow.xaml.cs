@@ -16,19 +16,15 @@ namespace Pizzaria
             janela.ShowDialog();
         }
 
-        private void AbrirPizzas_Click(object sender, RoutedEventArgs e)
+        private void AbrirAdmin_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Tela de Pizzas ainda não implementada!");
+            var janela = new AdminPizzas();
+            janela.ShowDialog();
         }
 
-        private void AbrirPedidos_Click(object sender, RoutedEventArgs e)
+        private void Sair_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Tela de Pedidos ainda não implementada!");
-        }
-
-        private void AbrirRelatorios_Click(object sender, RoutedEventArgs e)
-        {
-            MessageBox.Show("Tela de Relatórios ainda não implementada!");
+            Application.Current.Shutdown();
         }
     }
 }
