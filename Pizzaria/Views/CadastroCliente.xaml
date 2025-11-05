@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Área do Cliente - Pizzaria Fornalha" Height="600" Width="900"
         WindowStartupLocation="CenterOwner">
+
     <Grid Margin="12">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="380"/>
@@ -10,12 +11,17 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- Form cliente / seleção pizza -->
         <StackPanel Grid.Column="0">
             <TextBlock Text="Dados do Cliente" FontWeight="Bold" FontSize="16" Margin="0,0,0,6"/>
-            <TextBox x:Name="txtNomeCliente" PlaceholderText="Nome"/>
-            <TextBox x:Name="txtTelefoneCliente" PlaceholderText="Telefone"/>
-            <TextBox x:Name="txtEnderecoCliente" PlaceholderText="Endereço (para entrega)"/>
+
+            <TextBlock Text="Nome:" Margin="0,4,0,0"/>
+            <TextBox x:Name="txtNomeCliente" Margin="0,0,0,6"/>
+
+            <TextBlock Text="Telefone:" Margin="0,4,0,0"/>
+            <TextBox x:Name="txtTelefoneCliente" Margin="0,0,0,6"/>
+
+            <TextBlock Text="Endereço (para entrega):" Margin="0,4,0,0"/>
+            <TextBox x:Name="txtEnderecoCliente" Margin="0,0,0,6"/>
 
             <TextBlock Text="Opção de entrega" FontWeight="Bold" Margin="0,8,0,4"/>
             <StackPanel Orientation="Horizontal">
@@ -30,7 +36,7 @@
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="40"/>
                     <DataGridTextColumn Header="Nome" Binding="{Binding Nome}" Width="*"/>
-                    <DataGridTextColumn Header="Preço" Binding="{Binding Preco}" Width="120" StringFormat="R$ {0:F2}"/>
+                    <DataGridTextColumn Header="Preço" Binding="{Binding Preco, StringFormat={}{0:C2}}" Width="120"/>
                     <DataGridTextColumn Header="Categoria" Binding="{Binding Categoria}" Width="120"/>
                 </DataGrid.Columns>
             </DataGrid>
@@ -38,18 +44,17 @@
             <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                 <TextBlock Text="Qtd:" VerticalAlignment="Center" Margin="0,0,6,0"/>
                 <TextBox x:Name="txtQuantidade" Width="60" Text="1"/>
-                <Button Content="Adicionar ao pedido" Click="AdicionarAoPedido_Click" />
+                <Button Content="Adicionar ao pedido" Click="AdicionarAoPedido_Click" Margin="6,0,0,0"/>
             </StackPanel>
         </StackPanel>
 
-        <!-- Carrinho e finalização -->
         <StackPanel Grid.Column="2">
             <TextBlock Text="Carrinho" FontWeight="Bold" FontSize="16" Margin="0,0,0,6"/>
             <DataGrid x:Name="dgCarrinho" AutoGenerateColumns="False" Height="260" IsReadOnly="True">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Pizza" Binding="{Binding Pizza.Nome}" Width="*"/>
                     <DataGridTextColumn Header="Qtd" Binding="{Binding Quantidade}" Width="70"/>
-                    <DataGridTextColumn Header="Subtotal" Binding="{Binding Subtotal}" Width="130" StringFormat="R$ {0:F2}"/>
+                    <DataGridTextColumn Header="Subtotal" Binding="{Binding Subtotal, StringFormat={}{0:C2}}" Width="130"/>
                 </DataGrid.Columns>
             </DataGrid>
 
@@ -59,17 +64,18 @@
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
-                <Button Content="Finalizar Pedido" Width="140" Click="FinalizarPedido_Click"/>
+                <Button Content="Finalizar Pedido" Width="140" Click="FinalizarPedido_Click" Margin="0,0,6,0"/>
                 <Button Content="Limpar Carrinho" Width="140" Click="LimparCarrinho_Click" Background="#FF3A3A3A"/>
             </StackPanel>
 
             <Separator Margin="0,14,0,14"/>
+
             <TextBlock Text="Pedidos recentes" FontWeight="Bold" FontSize="14"/>
             <DataGrid x:Name="dgPedidos" AutoGenerateColumns="False" Height="160" IsReadOnly="True">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="50"/>
                     <DataGridTextColumn Header="Cliente" Binding="{Binding Cliente.Nome}" Width="*"/>
-                    <DataGridTextColumn Header="Total" Binding="{Binding Total}" Width="120" StringFormat="R$ {0:F2}"/>
+                    <DataGridTextColumn Header="Total" Binding="{Binding Total, StringFormat={}{0:C2}}" Width="120"/>
                     <DataGridTextColumn Header="Entrega" Binding="{Binding TipoEntrega}" Width="100"/>
                 </DataGrid.Columns>
             </DataGrid>
