@@ -3,14 +3,14 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using Pizzaria.Models;
-
+using Pizzaria.Views; // para reconhecer a tela Pagamento
 
 namespace Pizzaria.Views
 {
     public partial class CadastroCliente : Window
     {
-        private PizzariaContext _context = new PizzariaContext();
-        private ObservableCollection<ItemPedido> carrinho = new ObservableCollection<ItemPedido>();
+        private readonly PizzariaContext _context = new PizzariaContext();
+        private readonly ObservableCollection<ItemPedido> carrinho = new ObservableCollection<ItemPedido>();
 
         public CadastroCliente()
         {
@@ -49,7 +49,6 @@ namespace Pizzaria.Views
                 return;
             }
 
-        
             var item = new ItemPedido
             {
                 Pizza = pizza,
@@ -89,7 +88,15 @@ namespace Pizzaria.Views
                     return;
                 }
 
-               
+                // Confirmação da forma de pagamento
+                var janelaPagamento = new Pagamento();
+                if (janelaPagamento.ShowDialog() != true)
+                    return;
+
+                var formaPagamento = janelaPagamento.FormaPagamento;
+                var troco = janelaPagamento.Troco;
+
+                // Verifica ou cadastra cliente
                 var cliente = _context.Clientes.FirstOrDefault(c => c.Telefone == txtTelefoneCliente.Text);
                 if (cliente == null)
                 {
@@ -104,13 +111,13 @@ namespace Pizzaria.Views
                 }
                 else
                 {
-                    
                     cliente.Nome = txtNomeCliente.Text;
                     cliente.Endereco = txtEnderecoCliente.Text;
                     _context.Clientes.Update(cliente);
                     _context.SaveChanges();
                 }
 
+                // Cria pedido
                 var pedido = new Pedido
                 {
                     ClienteId = cliente.Id,
@@ -121,9 +128,9 @@ namespace Pizzaria.Views
                     Total = carrinho.Sum(i => i.Subtotal)
                 };
                 _context.Pedidos.Add(pedido);
-                _context.SaveChanges(); 
+                _context.SaveChanges();
 
-          
+                // Adiciona itens do pedido
                 foreach (var item in carrinho)
                 {
                     var ip = new ItemPedido
@@ -137,9 +144,16 @@ namespace Pizzaria.Views
 
                 _context.SaveChanges();
 
-                MessageBox.Show($"Pedido #{pedido.Id} criado com sucesso! Total: R$ {pedido.Total:F2}", "Sucesso", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(
+                    $"Pedido #{pedido.Id} criado com sucesso!\n" +
+                    $"Total: R$ {pedido.Total:F2}\n" +
+                    $"Pagamento: {formaPagamento}" +
+                    (formaPagamento == "Dinheiro" && troco > 0 ? $"\nTroco para: R$ {troco:F2}" : ""),
+                    "Sucesso",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information
+                );
 
-                
                 carrinho.Clear();
                 AtualizarTotal();
                 CarregarPedidos();
