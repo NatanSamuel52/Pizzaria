@@ -3,7 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using Pizzaria.Models;
-using Pizzaria.Views; // para reconhecer a tela Pagamento
+using Pizzaria.Views; 
 
 namespace Pizzaria.Views
 {
@@ -88,7 +88,6 @@ namespace Pizzaria.Views
                     return;
                 }
 
-                // Confirmação da forma de pagamento
                 var janelaPagamento = new Pagamento();
                 if (janelaPagamento.ShowDialog() != true)
                     return;
@@ -96,7 +95,6 @@ namespace Pizzaria.Views
                 var formaPagamento = janelaPagamento.FormaPagamento;
                 var troco = janelaPagamento.Troco;
 
-                // Verifica ou cadastra cliente
                 var cliente = _context.Clientes.FirstOrDefault(c => c.Telefone == txtTelefoneCliente.Text);
                 if (cliente == null)
                 {
@@ -117,7 +115,6 @@ namespace Pizzaria.Views
                     _context.SaveChanges();
                 }
 
-                // Cria pedido
                 var pedido = new Pedido
                 {
                     ClienteId = cliente.Id,
@@ -130,7 +127,6 @@ namespace Pizzaria.Views
                 _context.Pedidos.Add(pedido);
                 _context.SaveChanges();
 
-                // Adiciona itens do pedido
                 foreach (var item in carrinho)
                 {
                     var ip = new ItemPedido
