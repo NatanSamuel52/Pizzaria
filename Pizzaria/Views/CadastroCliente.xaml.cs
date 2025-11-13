@@ -1,49 +1,40 @@
 ﻿using System;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using Pizzaria.Models;
-using Pizzaria.Views; 
 
 namespace Pizzaria.Views
 {
     public partial class CadastroCliente : Window
     {
         private readonly PizzariaContext _context = new PizzariaContext();
-        private readonly ObservableCollection<ItemPedido> carrinho = new ObservableCollection<ItemPedido>();
+        private List<ItemPedido> itensPedido = new List<ItemPedido>();
+        private List<Pizza> pizzasDisponiveis = new List<Pizza>();
 
         public CadastroCliente()
         {
             InitializeComponent();
-            dgCarrinho.ItemsSource = carrinho;
             CarregarPizzas();
-            CarregarPedidos();
-            AtualizarTotal();
+            AtualizarCarrinho();
+            AtualizarPedidos();
         }
 
         private void CarregarPizzas()
         {
-            dgPizzasCliente.ItemsSource = _context.Pizzas.ToList();
-        }
-
-        private void CarregarPedidos()
-        {
-            dgPedidos.ItemsSource = _context.Pedidos
-                .OrderByDescending(p => p.Data)
-                .Take(20)
-                .ToList();
+            pizzasDisponiveis = _context.Pizzas.ToList();
+            dgPizzasCliente.ItemsSource = pizzasDisponiveis;
         }
 
         private void AdicionarAoPedido_Click(object sender, RoutedEventArgs e)
         {
-            var pizza = dgPizzasCliente.SelectedItem as Pizza;
-            if (pizza == null)
+            if (!(dgPizzasCliente.SelectedItem is Pizza pizzaSelecionada))
             {
                 MessageBox.Show("Selecione uma pizza do cardápio.", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            if (!int.TryParse(txtQuantidade.Text, out int qtd) || qtd <= 0)
+            if (!int.TryParse(txtQuantidade.Text, out int quantidade) || quantidade <= 0)
             {
                 MessageBox.Show("Quantidade inválida.", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
@@ -51,113 +42,78 @@ namespace Pizzaria.Views
 
             var item = new ItemPedido
             {
-                Pizza = pizza,
-                PizzaId = pizza.Id,
-                Quantidade = qtd
+                Pizza = pizzaSelecionada,
+                PizzaId = pizzaSelecionada.Id,
+                Quantidade = quantidade
             };
 
-            carrinho.Add(item);
-            AtualizarTotal();
+            itensPedido.Add(item);
+            AtualizarCarrinho();
         }
 
-        private void AtualizarTotal()
+        private void AtualizarCarrinho()
         {
-            decimal total = carrinho.Sum(i => i.Subtotal);
-            txtTotal.Text = $"R$ {total:F2}";
+            dgCarrinho.ItemsSource = null;
+            dgCarrinho.ItemsSource = itensPedido;
+            decimal total = itensPedido.Sum(i => i.Subtotal);
+            txtTotal.Text = total.ToString("C2");
         }
 
         private void LimparCarrinho_Click(object sender, RoutedEventArgs e)
         {
-            carrinho.Clear();
-            AtualizarTotal();
+            itensPedido.Clear();
+            AtualizarCarrinho();
         }
 
+        // AGORA ESTE É O MÉTODO CORRETO DE FINALIZAR PEDIDO (com tela de pagamento)
         private void FinalizarPedido_Click(object sender, RoutedEventArgs e)
         {
-            try
+            string nome = txtNomeCliente.Text?.Trim();
+            string endereco = txtEnderecoCliente.Text?.Trim();
+            string telefone = txtTelefoneCliente.Text?.Trim();
+
+            if (string.IsNullOrWhiteSpace(nome) || string.IsNullOrWhiteSpace(telefone))
             {
-                if (carrinho.Count == 0)
-                {
-                    MessageBox.Show("Carrinho vazio.", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                if (string.IsNullOrWhiteSpace(txtNomeCliente.Text) || string.IsNullOrWhiteSpace(txtTelefoneCliente.Text))
-                {
-                    MessageBox.Show("Preencha nome e telefone do cliente.", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                var janelaPagamento = new Pagamento();
-                if (janelaPagamento.ShowDialog() != true)
-                    return;
-
-                var formaPagamento = janelaPagamento.FormaPagamento;
-                var troco = janelaPagamento.Troco;
-
-                var cliente = _context.Clientes.FirstOrDefault(c => c.Telefone == txtTelefoneCliente.Text);
-                if (cliente == null)
-                {
-                    cliente = new Cliente
-                    {
-                        Nome = txtNomeCliente.Text,
-                        Telefone = txtTelefoneCliente.Text,
-                        Endereco = txtEnderecoCliente.Text
-                    };
-                    _context.Clientes.Add(cliente);
-                    _context.SaveChanges();
-                }
-                else
-                {
-                    cliente.Nome = txtNomeCliente.Text;
-                    cliente.Endereco = txtEnderecoCliente.Text;
-                    _context.Clientes.Update(cliente);
-                    _context.SaveChanges();
-                }
-
-                var pedido = new Pedido
-                {
-                    ClienteId = cliente.Id,
-                    Cliente = cliente,
-                    TipoEntrega = rbEntregar.IsChecked == true ? "Entregar" : "Retirar",
-                    Status = "Recebido",
-                    Data = DateTime.Now,
-                    Total = carrinho.Sum(i => i.Subtotal)
-                };
-                _context.Pedidos.Add(pedido);
-                _context.SaveChanges();
-
-                foreach (var item in carrinho)
-                {
-                    var ip = new ItemPedido
-                    {
-                        PedidoId = pedido.Id,
-                        PizzaId = item.PizzaId,
-                        Quantidade = item.Quantidade
-                    };
-                    _context.ItensPedido.Add(ip);
-                }
-
-                _context.SaveChanges();
-
-                MessageBox.Show(
-                    $"Pedido #{pedido.Id} criado com sucesso!\n" +
-                    $"Total: R$ {pedido.Total:F2}\n" +
-                    $"Pagamento: {formaPagamento}" +
-                    (formaPagamento == "Dinheiro" && troco > 0 ? $"\nTroco para: R$ {troco:F2}" : ""),
-                    "Sucesso",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information
-                );
-
-                carrinho.Clear();
-                AtualizarTotal();
-                CarregarPedidos();
+                MessageBox.Show("Preencha nome e telefone do cliente.", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
             }
-            catch (Exception ex)
+
+            if (itensPedido.Count == 0)
             {
-                MessageBox.Show("Erro ao finalizar pedido: " + ex.Message, "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Adicione pelo menos uma pizza ao pedido.", "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
             }
+
+            var cliente = new Cliente
+            {
+                Nome = nome,
+                Endereco = endereco,
+                Telefone = telefone
+            };
+
+            string tipoEntrega = rbEntregar.IsChecked == true ? "Entrega" : "Retirada";
+
+            // 👉 Abre a tela de pagamento ANTES de salvar o pedido
+            var telaPagamento = new Pagamento(cliente, new List<ItemPedido>(itensPedido), tipoEntrega);
+            telaPagamento.Owner = this;
+            bool? resultado = telaPagamento.ShowDialog();
+
+            if (resultado == true)
+            {
+                // Atualiza a tela depois do pagamento concluído
+                itensPedido.Clear();
+                AtualizarCarrinho();
+                AtualizarPedidos();
+            }
+        }
+
+        private void AtualizarPedidos()
+        {
+            dgPedidos.ItemsSource = null;
+            dgPedidos.ItemsSource = _context.Pedidos
+                .OrderByDescending(p => p.Data)
+                .Take(20)
+                .ToList();
         }
     }
 }
